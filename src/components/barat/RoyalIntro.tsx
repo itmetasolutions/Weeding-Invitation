@@ -64,7 +64,17 @@ export function RoyalIntro({
         .from("[data-engrave]", { opacity: 0, scale: 0.6, transformOrigin: "50% 50%", stagger: 0.06, duration: 0.6, ease: "back.out(1.6)" }, "arch+=2.3")
         .from("[data-medallion]", { scale: 0.4, opacity: 0, rotate: -40, transformOrigin: "50% 50%", duration: 1.4, ease: "expo.out" }, "arch+=2.6")
         .from("[data-mono]", { opacity: 0, y: 8, stagger: 0.18, duration: 0.8, ease: "power3.out" }, "arch+=3.0")
-        .from("[data-copy] > *", { opacity: 0, y: 18, filter: "blur(6px)", stagger: 0.16, duration: 1, ease: "power3.out" }, "arch+=3.1")
+        /* fromTo, not from: `from` reads the end state off the element, so on a
+           replay (or any second run of this effect) it captured the blurred,
+           offset start state as the destination and the Open button stayed
+           blurred and 18px low for good. Spelling out both ends is immune to
+           whatever state the element is in when the timeline is built. */
+        .fromTo(
+          "[data-copy] > *",
+          { opacity: 0, y: 18, filter: "blur(6px)" },
+          { opacity: 1, y: 0, filter: "blur(0px)", stagger: 0.16, duration: 1, ease: "power3.out", clearProps: "filter" },
+          "arch+=3.1",
+        )
         .to("[data-light]", { opacity: 0.35, duration: 1.5 }, "arch+=1");
 
       gsap.to("[data-medallion-spin]", { rotate: 360, duration: 90, repeat: -1, ease: "none", transformOrigin: "50% 50%" });

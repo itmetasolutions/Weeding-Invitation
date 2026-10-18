@@ -15,7 +15,6 @@ export default function Home() {
         <h1 className="mt-3 text-4xl italic">
           {COUPLE.groom} &amp; {COUPLE.bride}
         </h1>
-        <p className="mt-3 text-lg opacity-70">Two separate invitations — send each guest the one they are invited to.</p>
         <div className="mt-10 grid gap-4">
           <Link href="/sehra-bandi-barat" className="block border border-[#c5a46d]/60 bg-[#0b1427] px-6 py-5 text-left transition hover:border-[#c5a46d]">
             <span className="block text-xs uppercase tracking-[0.3em] text-[#c5a46d]">Invitation 1 · 3 November</span>
