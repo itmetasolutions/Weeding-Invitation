@@ -1,6 +1,18 @@
 /* Original botanical SVG artwork for the Pearl Garden invitation. */
 
+import type { ReactNode } from "react";
+
 const r1 = (n: number) => Math.round(n * 10) / 10;
+
+/**
+ * One drop shadow for a whole drawing. The shadow used to be set on every
+ * petal and bud, so a single wreath cost dozens of offscreen filter passes
+ * and scrolling ran at a third of the frame rate. Filtering the group once
+ * keeps the same soft shadow for one pass per drawing.
+ */
+function BotanicalShadow({ p, children }: { p: string; children: ReactNode }) {
+  return <g filter={`url(#${p}-shadow)`}>{children}</g>;
+}
 
 function petalPath(r: number, w = 0.62) {
   const W = r * w;
@@ -47,11 +59,14 @@ export function Rose({ p, x = 0, y = 0, s = 1, rot = 0 }: { p: string; x?: numbe
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`} data-rose>
       {rings.map((ring, ri) => (
         /* One group per ring so a rose can unfold a whole ring at a time:
-           four tweens instead of twenty, and no filtered petal is tweened alone. */
+           four tweens instead of twenty. The drop shadow is applied once per
+           drawing (see BotanicalShadow) rather than per petal: filtering each
+           of the ~19 petals separately meant ~19 offscreen filter passes per
+           rose, which was the entire cost of this page. */
         <g key={ri} data-petal-ring={ri}>
           {Array.from({ length: ring.n }, (_, i) => (
             <g key={i} transform={`rotate(${ring.off + (i * 360) / ring.n})`}>
-              <path data-petal data-ring={ri} d={petalPath(ring.r, ring.w)} fill={ring.fill} stroke="#D9C8AC" strokeWidth="0.5" filter={`url(#${p}-shadow)`} />
+              <path data-petal data-ring={ri} d={petalPath(ring.r, ring.w)} fill={ring.fill} stroke="#D9C8AC" strokeWidth="0.5" />
             </g>
           ))}
         </g>
@@ -65,7 +80,7 @@ export function Rose({ p, x = 0, y = 0, s = 1, rot = 0 }: { p: string; x?: numbe
 export function Bud({ p, x, y, s = 1, rot = 0 }: { p: string; x: number; y: number; s?: number; rot?: number }) {
   return (
     <g transform={`translate(${x} ${y}) rotate(${rot}) scale(${s})`} data-bud>
-      <path d="M0,0 C-9,-6 -8,-22 0,-28 C8,-22 9,-6 0,0 Z" fill={`url(#${p}-petal)`} stroke="#D9C8AC" strokeWidth="0.5" filter={`url(#${p}-shadow)`} />
+      <path d="M0,0 C-9,-6 -8,-22 0,-28 C8,-22 9,-6 0,0 Z" fill={`url(#${p}-petal)`} stroke="#D9C8AC" strokeWidth="0.5" />
       <path d="M0,0 C-6,-4 -10,-12 -8,-18 M0,0 C6,-4 10,-12 8,-18" stroke={`url(#${p}-leaf)`} strokeWidth="2" fill="none" />
     </g>
   );
@@ -107,19 +122,21 @@ export function Spray({ p, className }: { p: string; className?: string }) {
   return (
     <svg viewBox="0 0 320 320" className={className} aria-hidden>
       <BotanicalDefs p={p} />
-      <path data-stem d="M-10,330 C40,260 80,190 150,140 S260,70 300,40" fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="2.2" strokeLinecap="round" />
-      <path data-stem d="M90,190 C70,150 80,110 60,70" fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.4" strokeLinecap="round" />
-      <path data-stem d="M200,98 C215,140 250,150 275,190" fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1" strokeLinecap="round" />
-      {leaves.map(([x, y, r, s, line], i) => (
-        <Leaf key={i} p={p} x={x} y={y} rot={r} s={s} line={line} />
-      ))}
-      <Bud p={p} x={60} y={72} rot={-14} s={0.9} />
-      <Bud p={p} x={276} y={194} rot={150} s={0.7} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <circle key={i} data-berry cx={230 + i * 9} cy={120 + i * 13} r={2.6} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.6" />
-      ))}
-      <Rose p={p} x={150} y={140} s={0.95} rot={10} />
-      <Rose p={p} x={290} y={44} s={0.6} rot={-30} />
+      <BotanicalShadow p={p}>
+        <path data-stem d="M-10,330 C40,260 80,190 150,140 S260,70 300,40" fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="2.2" strokeLinecap="round" />
+        <path data-stem d="M90,190 C70,150 80,110 60,70" fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.4" strokeLinecap="round" />
+        <path data-stem d="M200,98 C215,140 250,150 275,190" fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1" strokeLinecap="round" />
+        {leaves.map(([x, y, r, s, line], i) => (
+          <Leaf key={i} p={p} x={x} y={y} rot={r} s={s} line={line} />
+        ))}
+        <Bud p={p} x={60} y={72} rot={-14} s={0.9} />
+        <Bud p={p} x={276} y={194} rot={150} s={0.7} />
+        {[0, 1, 2, 3, 4].map((i) => (
+          <circle key={i} data-berry cx={230 + i * 9} cy={120 + i * 13} r={2.6} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.6" />
+        ))}
+        <Rose p={p} x={150} y={140} s={0.95} rot={10} />
+        <Rose p={p} x={290} y={44} s={0.6} rot={-30} />
+      </BotanicalShadow>
     </svg>
   );
 }
@@ -143,23 +160,25 @@ export function Wreath({ p, className }: { p: string; className?: string }) {
   return (
     <svg viewBox="0 0 500 500" className={className} aria-hidden>
       <BotanicalDefs p={p} />
-      <circle data-ring-draw cx={cx} cy={cy} r={R} fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1.1" />
-      <circle data-ring-draw cx={cx} cy={cy} r={R - 9} fill="none" stroke={`url(#${p}-champ)`} strokeWidth="0.5" />
-      <path data-stem d={`M${pt(200)[0]},${pt(200)[1]} A${R},${R} 0 0 0 ${pt(80)[0]},${pt(80)[1]}`} fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.6" transform={`translate(0 0)`} />
-      <path data-stem d={`M${pt(-120)[0]},${pt(-120)[1]} A${R},${R} 0 0 1 ${pt(10)[0]},${pt(10)[1]}`} fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.6" />
-      {leafAngles.map((a, i) => {
-        const [x, y] = pt(a, R + (i % 2 ? 6 : -6));
-        const tangent = a + (a > 0 && a < 200 ? 90 : -90) + (i % 2 ? 25 : -25);
-        return <Leaf key={i} p={p} x={x} y={y} rot={tangent} s={0.8 + (i % 3) * 0.12} line={i % 4 === 1} />;
-      })}
-      {roses.map(([a, s], i) => {
-        const [x, y] = pt(a);
-        return <Rose key={i} p={p} x={x} y={y} s={s} rot={a} />;
-      })}
-      {[60, 210, -140, 30].map((a, i) => {
-        const [x, y] = pt(a, R + 2);
-        return <circle key={i} data-berry cx={x} cy={y} r={3.4} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.8" />;
-      })}
+      <BotanicalShadow p={p}>
+        <circle data-ring-draw cx={cx} cy={cy} r={R} fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1.1" />
+        <circle data-ring-draw cx={cx} cy={cy} r={R - 9} fill="none" stroke={`url(#${p}-champ)`} strokeWidth="0.5" />
+        <path data-stem d={`M${pt(200)[0]},${pt(200)[1]} A${R},${R} 0 0 0 ${pt(80)[0]},${pt(80)[1]}`} fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.6" transform={`translate(0 0)`} />
+        <path data-stem d={`M${pt(-120)[0]},${pt(-120)[1]} A${R},${R} 0 0 1 ${pt(10)[0]},${pt(10)[1]}`} fill="none" stroke={`url(#${p}-leaf)`} strokeWidth="1.6" />
+        {leafAngles.map((a, i) => {
+          const [x, y] = pt(a, R + (i % 2 ? 6 : -6));
+          const tangent = a + (a > 0 && a < 200 ? 90 : -90) + (i % 2 ? 25 : -25);
+          return <Leaf key={i} p={p} x={x} y={y} rot={tangent} s={0.8 + (i % 3) * 0.12} line={i % 4 === 1} />;
+        })}
+        {roses.map(([a, s], i) => {
+          const [x, y] = pt(a);
+          return <Rose key={i} p={p} x={x} y={y} s={s} rot={a} />;
+        })}
+        {[60, 210, -140, 30].map((a, i) => {
+          const [x, y] = pt(a, R + 2);
+          return <circle key={i} data-berry cx={x} cy={y} r={3.4} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.8" />;
+        })}
+      </BotanicalShadow>
       {/* bead of light that draws the ring, echoing the opening's pearl rings */}
       <g data-wreath-orbit>
         <circle data-wreath-bead cx={cx + R} cy={cy} r={3.6} fill="#FFFDF8" opacity="0" />
@@ -173,18 +192,20 @@ export function Garland({ p, className }: { p: string; className?: string }) {
   return (
     <svg viewBox="0 0 600 120" className={className} aria-hidden>
       <BotanicalDefs p={p} />
-      <path data-stem d="M10,20 Q300,130 590,20" fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1" />
-      {Array.from({ length: 13 }, (_, i) => {
-        const t = (i + 1) / 14;
-        const x = (1 - t) * (1 - t) * 10 + 2 * (1 - t) * t * 300 + t * t * 590;
-        const y = (1 - t) * (1 - t) * 20 + 2 * (1 - t) * t * 130 + t * t * 20;
-        return <circle key={i} data-berry cx={r1(x)} cy={r1(y)} r={i === 6 ? 5 : 3} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.7" />;
-      })}
-      <Leaf p={p} x={262} y={70} rot={170} s={0.9} />
-      <Leaf p={p} x={338} y={70} rot={10} s={0.9} />
-      <Leaf p={p} x={240} y={64} rot={210} s={0.7} line />
-      <Leaf p={p} x={360} y={64} rot={-30} s={0.7} line />
-      <Rose p={p} x={300} y={74} s={0.42} />
+      <BotanicalShadow p={p}>
+        <path data-stem d="M10,20 Q300,130 590,20" fill="none" stroke={`url(#${p}-champ)`} strokeWidth="1" />
+        {Array.from({ length: 13 }, (_, i) => {
+          const t = (i + 1) / 14;
+          const x = (1 - t) * (1 - t) * 10 + 2 * (1 - t) * t * 300 + t * t * 590;
+          const y = (1 - t) * (1 - t) * 20 + 2 * (1 - t) * t * 130 + t * t * 20;
+          return <circle key={i} data-berry cx={r1(x)} cy={r1(y)} r={i === 6 ? 5 : 3} fill="#FFFDF8" stroke={`url(#${p}-champ)`} strokeWidth="0.7" />;
+        })}
+        <Leaf p={p} x={262} y={70} rot={170} s={0.9} />
+        <Leaf p={p} x={338} y={70} rot={10} s={0.9} />
+        <Leaf p={p} x={240} y={64} rot={210} s={0.7} line />
+        <Leaf p={p} x={360} y={64} rot={-30} s={0.7} line />
+        <Rose p={p} x={300} y={74} s={0.42} />
+      </BotanicalShadow>
     </svg>
   );
 }
