@@ -31,19 +31,6 @@ Requires Node 18.18+ (Node 20 or 22 recommended).
    - Barat-only guests: `https://your-domain.com/sehra-bandi-barat`
    - Walima-only guests: `https://your-domain.com/walima`
 
-## Standalone copies (one folder per event)
-
-Two self-contained projects live in this folder, each deployable on its own domain and containing only its own event:
-
-| Folder | Event | Routes |
-|---|---|---|
-| `sehra-bandi-barat/` | Sehra Bandi & Barat | `/sehra-bandi-barat`, `/` redirects to it |
-| `walima/` | Walima Reception | `/walima`, `/` redirects to it |
-
-Each has its own `package.json`, config, `node_modules` and README — `cd` into one and run `npm install && npm run dev`. They are excluded from this project's `tsconfig.json`, so the combined project still builds and typechecks on its own.
-
-Because `src/data/wedding.ts`, `src/lib/`, `src/components/shared/` and the event's own components are **copies**, a correction made here must be pasted into the matching folder (and the other way round). Keep editing whichever copy you actually deploy.
-
 ## Editing details
 
 Every fact lives in **`src/data/wedding.ts`**: names, times (ISO with `+05:00`), venues, Maps links and calendar end times. Change it once and the pages, calendar files, share text and OG images all update.
